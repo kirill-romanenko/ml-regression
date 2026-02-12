@@ -149,24 +149,12 @@ Catboost тоже отдает сильное предпочтение **lat**, 
 - Создание нового признака sqft_diff (отклонение площади дома от окрестных домов)
 
 ### Лучшие преобразования
-Сравнение происходило с изначальными метриками без преобразований
+Сравнение происходило с изначальными метриками без преобразований. Изменения показаны в процентах.
 
-Изменения показаны в процентах
-1. Логарифмическое преобразование таргета **price**
-
-   Большое улучшение у линейной регрессии.
-
-   У градиентных бустингов немного улучшился mape, r2 не изменился
-   <img width="764" height="390" alt="изображение" src="https://github.com/user-attachments/assets/abbc0560-ad00-45c6-a81e-532f5c62c0fb" />
-
-2. Удаление выбросов с помощью **IsolationForest**
-
-   После удаления выбросов логично сильно увеличились MAE и RMSE. Для более стабильной работы моделей можно оставить это преобразование
-   <img width="764" height="390" alt="изображение" src="https://github.com/user-attachments/assets/d6cd33a0-272b-495f-9200-7d1bc5d22e4a" />
-
-### Комбинация лучших преобразований
-Сравнение с изначальными метриками:
-<img width="764" height="390" alt="изображение" src="https://github.com/user-attachments/assets/460626f2-fe8c-477f-8847-e8b5ead9423c" />
+Из всех преобразований дало ощутимое улучшение метрик только - Логарифмическое преобразование таргета **price**:
+   
+Большое улучшение у линейной регрессии. У градиентных бустингов немного улучшился mape, r2 не изменился
+<img width="764" height="390" alt="изображение" src="https://github.com/user-attachments/assets/abbc0560-ad00-45c6-a81e-532f5c62c0fb" />
 
 ### Выбор окончательной модели
 Лучше всего по метрикам показал себя catboost.
@@ -174,7 +162,7 @@ Catboost тоже отдает сильное предпочтение **lat**, 
 Он будет использован для дальнейшего подбора гиперпараметров.
 
 Метрики моделей после применения комбинации лучших преобразований:
-<img width="779" height="390" alt="изображение" src="https://github.com/user-attachments/assets/1c4f5536-0184-4ac1-a57a-672e349532cf" />
+<img width="779" height="390" alt="изображение" src="https://github.com/user-attachments/assets/fe88ce0b-8cf0-444e-ba25-cbd2272be56b" />
 
 ## Подбор гиперпараметров
 
@@ -182,8 +170,8 @@ Catboost тоже отдает сильное предпочтение **lat**, 
 Для тюнинга гиперпараметров использовалась библиотека **Optuna** вместе с кроссвадидацией (TimeSeriesSplit).
 
 - Оптимизируемые метрики: MAE и RMSE
-- Количество шагов: 150
-- Время подбора: ~ 2 ч. 35 мин.
+- Количество шагов: 100
+- Время подбора: ~ 1 ч. 30 мин.
 
 ### Интервалы перебора
 ``` python
@@ -240,71 +228,63 @@ elif bootstrap_type == "MVS":
     )  # доля объектов при градиентном семплинге; баланс скорости и точности
 ```
 ### График изменения RMSE и MAE по время подбора гиперпараметров
-<img width="698" height="450" alt="newplot" src="https://github.com/user-attachments/assets/be7897ca-4d69-43d7-84bc-c1be4941d5eb" />
+<img width="676" height="450" alt="newplot" src="https://github.com/user-attachments/assets/c3601f5c-05c5-4631-b7ef-9908721951df" />
 
 ### Подобранные значения гиперпараметров
 #### Лучшие значения гиперпараметров
 - Гиперпараметры минимизирующие MAE:
   
   ```python
-  {'bootstrap_type': 'Bernoulli',
-   'iterations': 2390,
-   'depth': 7,
-   'learning_rate': 0.026545629176856086,
-   'l2_leaf_reg': 0.10354243602548131,
-   'min_data_in_leaf': 197,
-   'random_strength': 1.5236018770721467,
-   'rsm': 0.5998574249658826,
+  {'bootstrap_type': 'MVS',
+   'iterations': 1825,
+   'depth': 8,
+   'learning_rate': 0.029746504745818254,
+   'l2_leaf_reg': 2.6522750569879996,
+   'min_data_in_leaf': 23,
+   'random_strength': 1.411236546728776,
+   'rsm': 0.8492971773570348,
    'loss_function': 'RMSE',
-   'od_wait': 195,
-   'subsample': 0.7210723822028944}
+   'od_wait': 189,
+   'subsample': 0.8414471035639801}
   ```
 - Гиперпараметры минимизирующие RMSE:
   
   ```python
-  {'bootstrap_type': 'MVS',
-  'iterations': 1669,
-  'depth': 6,
-  'learning_rate': 0.07635918053104514,
-  'l2_leaf_reg': 5.142533035004691,
-  'min_data_in_leaf': 158,
-  'random_strength': 1.7962481199804916,
-  'rsm': 0.6978172821020538,
-  'loss_function': 'RMSE',
-  'od_wait': 138,
-  'subsample': 0.9371407071033508}
+  {'bootstrap_type': 'Bernoulli',
+   'iterations': 2341,
+   'depth': 5,
+   'learning_rate': 0.0523841920870183,
+   'l2_leaf_reg': 0.025354478844831108,
+   'min_data_in_leaf': 151,
+   'random_strength': 0.30826232447787905,
+   'rsm': 0.5539790089204958,
+   'loss_function': 'RMSE',
+   'od_wait': 192,
+   'subsample': 0.7770598445890202}
   ```
 #### График важности гиперпараметров
 Самый важный гиперпараметр - bootstrap_type
-<img width="715" height="450" alt="newplot" src="https://github.com/user-attachments/assets/e4410ed6-4d1f-4757-9fcd-40cdc81b4960" />
+<img width="676" height="450" alt="newplot" src="https://github.com/user-attachments/assets/e5fa2b0e-6cc8-4278-8875-90fa9ef32b4b" />
 
 ### Сравнение модели до и после подбора гиперпараметров
 #### Исходные метрики
 <img width="747" height="390" alt="изображение" src="https://github.com/user-attachments/assets/386f980a-fea6-4284-b35b-3c3fbd543aa6" />
 
 #### Метрики после подбора гиперпараметров минимизирующих MAE
-<img width="747" height="390" alt="изображение" src="https://github.com/user-attachments/assets/5c126872-4719-411d-911b-618b2efd4c82" />
+<img width="756" height="390" alt="изображение" src="https://github.com/user-attachments/assets/463f35b9-6e2b-4728-9d28-4a26da4e9a78" />
 
 #### Метрики после подбора гиперпараметров минимизирующих RMSE
-<img width="747" height="390" alt="изображение" src="https://github.com/user-attachments/assets/8e892dd5-0100-4dc8-b53a-db867aba5948" />
+<img width="756" height="390" alt="изображение" src="https://github.com/user-attachments/assets/2d9fafb4-21c3-47ac-a4c9-167a5056959b" />
 
 #### Сравнение и изначальными метриками
 После подбора гиперпараметров минимизирующих MAE:
-- MAE улучшился на 1.1%
-- RMSE улучшился на 0.5%
+- MAE практически не изменился
+- RMSE ухудшился на 3.4%
 - MAPE улучшился на 0.8%
-- R2 практически не изменился
+- R2 ухудшился на 0.8%
 
-<img width="747" height="390" alt="изображение" src="https://github.com/user-attachments/assets/3669d0fb-1ef8-478a-8936-c3e35926b64b" />
+<img width="759" height="390" alt="изображение" src="https://github.com/user-attachments/assets/f9cd98dd-98e6-482a-baf3-8be23a0d5ccd" />
 
-После подбора гиперпараметров минимизирующих RMSE:
-- MAE улучшился на 0.7%
-- RMSE улучшился на 1.0%
-- MAPE и R2 улучшились на 0.3%
+После подбора гиперпараметров минимизирующих RMSE метрики практически не изменились
 
-<img width="747" height="390" alt="изображение" src="https://github.com/user-attachments/assets/62d30afd-4f48-404e-90a3-2e6c2c4a501c" />
-
-#### Вывод
-Если важна устойчивость к выбросам и крупным ошибкам, лучше оптимизировать RMSE.
-
-Если важна средняя абсолютная точность прогноза, лучше оптимизировать MAE.
+<img width="768" height="390" alt="изображение" src="https://github.com/user-attachments/assets/79957881-392d-4f4c-a5f6-7cdebb58511c" />
